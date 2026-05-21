@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>祁煜 · 私密对话</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #2b1e2c; }
+    html, body { 
+      width: 100%; height: 100%; overflow: hidden; background: #2b1e2c;
+      position: fixed; top: 0; left: 0;
+    }
     body {
       font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
       display: flex; align-items: stretch; justify-content: center;
@@ -15,14 +21,16 @@
     .private-chat {
       width: 100%; height: 100%; max-width: 100%; background: #251f26;
       display: flex; flex-direction: column; border: none; position: relative;
+      height: 100vh; height: 100dvh;
     }
     .chat-header {
-      padding: 0.8rem 1.2rem;
+      padding: 0.8rem 1rem;
       background: linear-gradient(180deg, #332738 0%, #2c1f2e 100%);
       display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #46364a; flex-shrink: 0; gap: 0.5rem;
+      border-bottom: 1px solid #46364a; flex-shrink: 0; gap: 0.3rem;
+      flex-wrap: wrap;
     }
-    .partner-info { display: flex; align-items: center; gap: 0.7rem; flex: 1; }
+    .partner-info { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
     .avatar {
       width: 44px; height: 44px; border-radius: 50%; background: #44304a;
       display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
@@ -32,12 +40,12 @@
     }
     .avatar:hover { box-shadow: 0 4px 14px rgba(180,140,200,0.3); }
     .avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .partner-details { display: flex; flex-direction: column; }
-    .partner-name { font-weight: 580; font-size: 1.2rem; color: #dcc7e0; letter-spacing: 0.5px; }
-    .partner-sub { font-size: 0.7rem; color: #b395b9; }
-    .my-info { display: flex; align-items: center; gap: 0.5rem; flex-direction: row-reverse; }
+    .partner-details { display: flex; flex-direction: column; min-width: 0; }
+    .partner-name { font-weight: 580; font-size: 1.1rem; color: #dcc7e0; letter-spacing: 0.5px; }
+    .partner-sub { font-size: 0.65rem; color: #b395b9; }
+    .my-info { display: flex; align-items: center; gap: 0.3rem; flex-direction: row-reverse; flex-shrink: 0; }
     .my-details { text-align: right; }
-    .my-name { font-weight: 500; font-size: 0.9rem; color: #d0b5d6; }
+    .my-name { font-weight: 500; font-size: 0.8rem; color: #d0b5d6; }
     .my-avatar {
       width: 38px; height: 38px; border-radius: 50%; background: #4b3545;
       display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
@@ -47,16 +55,24 @@
     }
     .my-avatar:hover { box-shadow: 0 4px 14px rgba(210,160,180,0.3); }
     .my-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .wordcard-btn, .speed-btn {
+    
+    .header-buttons {
+      display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0;
+    }
+    
+    .wordcard-btn, .speed-btn, .clear-btn, .font-btn {
       background: rgba(70,50,75,0.7); border: 1px solid #6b5470; border-radius: 2rem;
-      padding: 0.4rem 0.8rem; font-weight: 500; color: #dabae0;
+      font-weight: 500; color: #dabae0;
       display: flex; align-items: center; justify-content: center; cursor: pointer;
       backdrop-filter: blur(8px); transition: 0.2s; white-space: nowrap;
-      min-width: 38px; height: 38px;
+      height: 36px; min-width: 36px; padding: 0.3rem 0.6rem;
     }
-    .wordcard-btn { gap: 0.2rem; font-size: 0.8rem; padding: 0.4rem 0.9rem; }
-    .speed-btn { font-size: 1.1rem; }
-    .wordcard-btn:hover, .speed-btn:hover { background: #5e4265; border-color: #8b6d91; }
+    .wordcard-btn { gap: 0.1rem; font-size: 0.75rem; }
+    .speed-btn { font-size: 1rem; padding: 0.3rem; }
+    .clear-btn { font-size: 1rem; padding: 0.3rem; }
+    .font-btn { font-size: 0.9rem; padding: 0.3rem; }
+    .wordcard-btn:hover, .speed-btn:hover, .clear-btn:hover, .font-btn:hover { background: #5e4265; border-color: #8b6d91; }
+
     .typing-indicator {
       display: none; padding: 0.3rem 1.2rem; font-size: 0.75rem; color: #b395b9;
       font-style: italic; align-items: center; gap: 0.4rem;
@@ -74,22 +90,24 @@
       0%, 60%, 100% { transform: translateY(0); }
       30% { transform: translateY(-6px); }
     }
+
     .messages-container {
-      flex: 1; width: 100%; padding: 1.2rem 1rem; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 1rem;
+      flex: 1; width: 100%; padding: 1rem 0.8rem; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 0.8rem;
       background: #231d25;
       background-image: radial-gradient(circle at 25% 30%, #352a38 1px, transparent 1px);
       background-size: 35px 35px; scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
     }
-    .messages-container::-webkit-scrollbar { width: 5px; }
+    .messages-container::-webkit-scrollbar { width: 4px; }
     .messages-container::-webkit-scrollbar-track { background: #342838; }
     .messages-container::-webkit-scrollbar-thumb { background: #5c4260; border-radius: 8px; }
-    .message-row { display: flex; align-items: flex-end; gap: 0.5rem; max-width: 85%; animation: fadeIn 0.25s ease-out; }
+    .message-row { display: flex; align-items: flex-end; gap: 0.4rem; max-width: 85%; animation: fadeIn 0.25s ease-out; }
     .message-row.sent { align-self: flex-end; flex-direction: row-reverse; }
     .message-row.received { align-self: flex-start; flex-direction: row; }
     .msg-avatar {
-      width: 34px; height: 34px; border-radius: 50%; display: flex;
-      align-items: center; justify-content: center; font-size: 1.1rem;
+      width: 30px; height: 30px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 1rem;
       flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
       border: 1.5px solid #5b4b5e; overflow: hidden; background-size: cover;
       background-position: center; background-color: #45374a;
@@ -99,81 +117,83 @@
     .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .bubble-wrapper { display: flex; flex-direction: column; max-width: 100%; }
     .bubble {
-      padding: 0.8rem 1.1rem; border-radius: 22px; font-size: 0.95rem;
-      line-height: 1.45; word-break: break-word; box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+      padding: 0.7rem 1rem; border-radius: 20px; line-height: 1.4;
+      word-break: break-word; box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+      transition: font-size 0.3s ease;
     }
     .sent .bubble {
       background: linear-gradient(135deg, #4d3a52, #3f2d45); color: #ecd9f0;
-      border-bottom-right-radius: 8px; border: 1px solid #624e68;
+      border-bottom-right-radius: 6px; border: 1px solid #624e68;
     }
     .received .bubble {
       background: linear-gradient(145deg, #3e3242, #352838); color: #e2d2e8;
-      border-bottom-left-radius: 8px; border: 1px solid #53415a;
+      border-bottom-left-radius: 6px; border: 1px solid #53415a;
     }
-    .bubble img.sticker-img { max-width: 120px; max-height: 120px; border-radius: 12px; display: block; }
+    .bubble img.sticker-img { max-width: 100px; max-height: 100px; border-radius: 10px; display: block; }
     .message-meta {
-      display: flex; align-items: center; gap: 0.3rem; margin-top: 0.25rem;
-      font-size: 0.65rem; color: #a088a8; padding: 0 0.2rem;
+      display: flex; align-items: center; gap: 0.2rem; margin-top: 0.2rem;
+      font-size: 0.6rem; color: #a088a8; padding: 0 0.2rem;
     }
     .sent .message-meta { justify-content: flex-end; }
     .received .message-meta { justify-content: flex-start; }
-    .read-text { color: #7aaae2; font-weight: 500; letter-spacing: 0.3px; }
+    .read-text { color: #7aaae2; font-weight: 500; letter-spacing: 0.3px; font-size: 0.6rem; }
     .empty-chat-hint {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; text-align: center; height: 100%;
       color: #9b7ea0; opacity: 0.8; padding: 2rem;
     }
-    .empty-chat-hint span { font-size: 3.2rem; margin-bottom: 0.6rem; filter: drop-shadow(0 8px 10px #392f3d); }
+    .empty-chat-hint span { font-size: 3rem; margin-bottom: 0.5rem; filter: drop-shadow(0 8px 10px #392f3d); }
     .empty-chat-hint p {
-      font-weight: 420; background: rgba(50,35,55,0.7); padding: 0.6rem 1.6rem;
-      border-radius: 32px; font-size: 1rem; backdrop-filter: blur(6px); color: #cbafd4;
+      font-weight: 420; background: rgba(50,35,55,0.7); padding: 0.5rem 1.4rem;
+      border-radius: 28px; font-size: 0.9rem; backdrop-filter: blur(6px); color: #cbafd4;
     }
     .input-area {
-      display: flex; align-items: center; padding: 0.8rem 1rem;
+      display: flex; align-items: center; padding: 0.7rem 0.8rem;
       background: rgba(40,28,42,0.9); border-top: 1px solid #4a3950;
-      gap: 0.5rem; backdrop-filter: blur(14px); flex-shrink: 0;
+      gap: 0.4rem; backdrop-filter: blur(14px); flex-shrink: 0;
     }
     .sticker-toggle-btn {
-      background: none; border: none; font-size: 1.5rem; cursor: pointer;
+      background: none; border: none; font-size: 1.3rem; cursor: pointer;
       color: #c9a9d4; padding: 0.2rem; border-radius: 50%;
       display: flex; align-items: center; justify-content: center; transition: 0.2s;
+      flex-shrink: 0;
     }
     .sticker-toggle-btn:hover { background: rgba(255,255,255,0.1); }
     .message-input {
-      flex: 1; border: 1px solid #5a4460; border-radius: 30px; padding: 0.8rem 1.3rem;
-      font-size: 0.98rem; outline: none; background: #332639; color: #ebd7f2;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+      flex: 1; border: 1px solid #5a4460; border-radius: 25px; padding: 0.7rem 1rem;
+      font-size: 0.9rem; outline: none; background: #332639; color: #ebd7f2;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.3); min-width: 0;
     }
     .message-input::placeholder { color: #937a9c; }
     .message-input:focus { border-color: #b284c4; background: #3d2d42; }
     .send-button {
       background: linear-gradient(135deg, #5c4268, #4b3158); border: none;
-      border-radius: 50%; width: 48px; height: 48px; display: flex;
+      border-radius: 50%; width: 42px; height: 42px; display: flex;
       align-items: center; justify-content: center; cursor: pointer;
-      color: #e2c6ed; font-size: 1.3rem; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      color: #e2c6ed; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       border: 1px solid #735b7c; flex-shrink: 0; transition: 0.2s;
     }
     .send-button:hover { background: #6e4f7a; }
     .sticker-panel {
       display: none; background: #2c1f2e; border-top: 1px solid #543f58;
-      padding: 0.8rem; flex-direction: column; gap: 0.6rem;
+      padding: 0.7rem; flex-direction: column; gap: 0.5rem;
     }
     .sticker-panel.active { display: flex; }
-    .sticker-tabs { display: flex; gap: 0.5rem; }
+    .sticker-tabs { display: flex; gap: 0.4rem; }
     .sticker-tab {
-      background: #3d2d42; border: none; color: #c7aad2; padding: 0.4rem 1rem;
-      border-radius: 1.5rem; cursor: pointer; font-size: 0.8rem; transition: 0.2s;
+      background: #3d2d42; border: none; color: #c7aad2; padding: 0.3rem 0.8rem;
+      border-radius: 1.2rem; cursor: pointer; font-size: 0.7rem; transition: 0.2s;
     }
     .sticker-tab.active { background: #735b7c; color: white; }
-    .sticker-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; max-height: 140px; overflow-y: auto; }
+    .sticker-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; max-height: 120px; overflow-y: auto; }
     .sticker-item {
-      width: 60px; height: 60px; object-fit: cover; border-radius: 10px;
+      width: 50px; height: 50px; object-fit: cover; border-radius: 8px;
       cursor: pointer; border: 2px solid transparent; transition: 0.2s;
     }
     .sticker-item:hover { border-color: #c396d6; }
     .add-sticker-btn {
       background: #46364f; border: 1px dashed #886f92; color: #cbb2d6;
-      border-radius: 8px; padding: 0.4rem; font-size: 0.7rem; cursor: pointer;
+      border-radius: 6px; padding: 0.3rem; font-size: 0.65rem; cursor: pointer;
     }
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -182,68 +202,70 @@
     }
     .modal-overlay.active { display: flex; }
     .modal-card {
-      background: #2d2230; border-radius: 2rem; padding: 1.5rem;
-      max-width: 500px; width: 92%; max-height: 85vh;
+      background: #2d2230; border-radius: 1.8rem; padding: 1.3rem;
+      max-width: 480px; width: 92%; max-height: 80vh;
       box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 1px solid #564361;
-      display: flex; flex-direction: column; gap: 1rem; color: #ddc6e3;
+      display: flex; flex-direction: column; gap: 0.8rem; color: #ddc6e3;
     }
-    .modal-card h3 { text-align: center; font-weight: 500; }
-    .card-tabs { display: flex; gap: 0.5rem; }
+    .modal-card h3 { text-align: center; font-weight: 500; font-size: 1rem; }
+    .card-tabs { display: flex; gap: 0.4rem; }
     .card-tab {
-      background: #3d2d42; border: none; color: #c7aad2; padding: 0.4rem 1rem;
-      border-radius: 1.5rem; cursor: pointer; font-size: 0.8rem; transition: 0.2s;
+      background: #3d2d42; border: none; color: #c7aad2; padding: 0.3rem 0.8rem;
+      border-radius: 1.2rem; cursor: pointer; font-size: 0.75rem; transition: 0.2s;
     }
     .card-tab.active { background: #735b7c; color: white; }
     .search-box {
-      background: #3c2d40; border: 1px solid #5e4963; border-radius: 2rem;
-      padding: 0.5rem 1rem; color: #ebd7f2; outline: none;
+      background: #3c2d40; border: 1px solid #5e4963; border-radius: 1.5rem;
+      padding: 0.4rem 0.8rem; color: #ebd7f2; outline: none; font-size: 0.8rem;
     }
     .card-list-container {
-      max-height: 200px; overflow-y: auto; background: #342539;
-      border-radius: 1rem; padding: 0.4rem; border: 1px solid #53405a;
+      max-height: 180px; overflow-y: auto; background: #342539;
+      border-radius: 0.8rem; padding: 0.3rem; border: 1px solid #53405a;
     }
     .card-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.5rem 0.7rem; background: #3f3145; border-radius: 0.8rem;
-      margin-bottom: 0.4rem; border: 1px solid #584461; font-size: 0.85rem;
+      padding: 0.4rem 0.6rem; background: #3f3145; border-radius: 0.6rem;
+      margin-bottom: 0.3rem; border: 1px solid #584461; font-size: 0.8rem;
     }
-    .card-text { flex: 1; margin-right: 0.4rem; word-break: break-word; }
+    .card-text { flex: 1; margin-right: 0.3rem; word-break: break-word; }
     .icon-btn {
-      background: none; border: none; font-size: 1rem; cursor: pointer;
-      color: #c9aad4; padding: 0.2rem 0.3rem; border-radius: 0.4rem;
+      background: none; border: none; font-size: 0.9rem; cursor: pointer;
+      color: #c9aad4; padding: 0.15rem 0.25rem; border-radius: 0.3rem;
     }
     .icon-btn:hover { background: #5a4565; }
     .btn {
-      border: none; border-radius: 2rem; padding: 0.5rem 1rem; font-size: 0.8rem;
+      border: none; border-radius: 1.5rem; padding: 0.4rem 0.8rem; font-size: 0.75rem;
       cursor: pointer; background: #4c3852; color: #e2cee9;
     }
     .btn:hover { background: #644c6c; }
     .speed-options {
-      display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;
+      display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem;
     }
     .speed-option {
-      padding: 0.4rem 1rem; border-radius: 1.5rem; cursor: pointer;
-      background: #3d2d42; color: #c7aad2; border: none; font-size: 0.8rem;
+      padding: 0.3rem 0.8rem; border-radius: 1.2rem; cursor: pointer;
+      background: #3d2d42; color: #c7aad2; border: none; font-size: 0.75rem;
     }
     .speed-option.active { background: #735b7c; color: white; }
-    .clear-data-btn {
-      background: #5e3a4a; border: 1px solid #7a4d5e; color: #e0b0c0;
-      border-radius: 2rem; padding: 0.3rem 0.8rem; font-size: 0.7rem;
-      cursor: pointer; margin-left: auto;
+
+    .font-size-slider {
+      display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;
     }
-    .clear-data-btn:hover { background: #734555; }
+    .font-size-slider input { flex: 1; }
+    .font-size-slider span { font-size: 0.75rem; color: #c7aad2; min-width: 50px; text-align: center; }
+
     @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
-<div class="private-chat">
+<div class="private-chat" id="mainChat">
   <div class="chat-header">
     <div class="partner-info">
       <div class="avatar" id="partnerAvatar" title="点击更换头像">🦋</div>
       <div class="partner-details"><span class="partner-name">祁煜</span><span class="partner-sub">在线</span></div>
     </div>
-    <div style="display:flex;align-items:center;gap:0.4rem;">
-      <button class="clear-data-btn" id="clearDataBtn" title="清除所有数据">🗑️ 清除数据</button>
+    <div class="header-buttons">
+      <button class="clear-btn" id="clearDataBtn" title="清除数据">🗑</button>
+      <button class="font-btn" id="fontSizeBtn" title="字体大小">A</button>
       <div class="wordcard-btn" id="wordcardBtn">字卡</div>
       <div class="speed-btn" id="speedBtn" title="回复速度">⏱️</div>
       <div class="my-info">
@@ -274,13 +296,14 @@
       <button class="sticker-tab" data-tab="partner">对方表情</button>
     </div>
     <div class="sticker-grid" id="stickerGrid"></div>
-    <div style="display:flex;gap:0.5rem;align-items:center;">
+    <div style="display:flex;gap:0.4rem;align-items:center;">
       <label class="add-sticker-btn">📁 导入<input type="file" id="stickerFileInput" accept="image/*" multiple style="display:none;"></label>
-      <span style="font-size:0.7rem;color:#9b809e;">板块：<span id="currentTabLabel">我的表情</span></span>
+      <span style="font-size:0.65rem;color:#9b809e;">板块：<span id="currentTabLabel">我的表情</span></span>
     </div>
   </div>
 </div>
 
+<!-- 字卡弹窗 -->
 <div class="modal-overlay" id="wordcardModal">
   <div class="modal-card">
     <h3>📝 管理字卡</h3>
@@ -290,30 +313,45 @@
     </div>
     <input type="text" class="search-box" id="cardSearchInput" placeholder="🔍 搜索字卡...">
     <div class="card-list-container" id="cardListContainer"></div>
-    <textarea id="cardTextarea" placeholder="每行一条字卡..." rows="2" style="width:100%;border-radius:1rem;padding:0.6rem;background:#3c2d40;color:#ebd7f2;border:1px solid #5e4963;"></textarea>
-    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-      <button class="btn" id="addCardsBtn">➕ 批量添加</button>
+    <textarea id="cardTextarea" placeholder="每行一条字卡..." rows="2" style="width:100%;border-radius:0.8rem;padding:0.5rem;background:#3c2d40;color:#ebd7f2;border:1px solid #5e4963;font-size:0.8rem;"></textarea>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+      <button class="btn" id="addCardsBtn">➕ 添加</button>
       <label class="btn" style="cursor:pointer;">📂 导入<input type="file" id="cardFileInput" accept=".txt,.csv,text/plain" style="display:none;"></label>
-      <button class="btn" id="deleteAllCardsBtn">🗑️ 批量删除</button>
+      <button class="btn" id="deleteAllCardsBtn">🗑️ 删除</button>
       <button class="btn" id="closeModalBtn">关闭</button>
     </div>
   </div>
 </div>
 
+<!-- 速度弹窗 -->
 <div class="modal-overlay" id="speedModal">
   <div class="modal-card">
     <h3>⏱️ 对方回复速度</h3>
-    <p style="text-align:center;font-size:0.85rem;color:#b395b9;">当前速度：<span id="currentSpeedLabel">中等（约15秒）</span></p>
+    <p style="text-align:center;font-size:0.8rem;color:#b395b9;">当前速度：<span id="currentSpeedLabel">中等（约15秒）</span></p>
     <div class="speed-options" id="speedOptions">
-      <button class="speed-option" data-speed="3000">极快（3秒）</button>
-      <button class="speed-option" data-speed="8000">快速（8秒）</button>
-      <button class="speed-option active" data-speed="15000">中等（15秒）</button>
-      <button class="speed-option" data-speed="30000">慢速（30秒）</button>
-      <button class="speed-option" data-speed="60000">较慢（1分钟）</button>
-      <button class="speed-option" data-speed="120000">很慢（2分钟）</button>
-      <button class="speed-option" data-speed="300000">极慢（5分钟）</button>
+      <button class="speed-option" data-speed="3000">3秒</button>
+      <button class="speed-option" data-speed="8000">8秒</button>
+      <button class="speed-option active" data-speed="15000">15秒</button>
+      <button class="speed-option" data-speed="30000">30秒</button>
+      <button class="speed-option" data-speed="60000">1分钟</button>
+      <button class="speed-option" data-speed="120000">2分钟</button>
+      <button class="speed-option" data-speed="300000">5分钟</button>
     </div>
     <button class="btn" id="closeSpeedModalBtn" style="align-self:center;">关闭</button>
+  </div>
+</div>
+
+<!-- 字体大小弹窗 -->
+<div class="modal-overlay" id="fontModal">
+  <div class="modal-card">
+    <h3>Aa 字体大小</h3>
+    <div class="font-size-slider">
+      <span style="font-size:0.7rem;">小</span>
+      <input type="range" id="fontSizeSlider" min="12" max="22" value="15" step="1">
+      <span style="font-size:1rem;">大</span>
+    </div>
+    <p style="text-align:center;font-size:0.8rem;color:#b395b9;">当前：<span id="currentFontLabel">15px</span></p>
+    <button class="btn" id="closeFontModalBtn" style="align-self:center;">关闭</button>
   </div>
 </div>
 
@@ -322,9 +360,21 @@
 
 <script>
 (function() {
-  // ========== 数据存储 ==========
   var STORAGE_KEY = 'qiyu_chat_data';
-  
+  var FONT_SIZE_KEY = 'qiyu_chat_fontsize';
+  var messages = [];
+  var textCards = [];
+  var emojiCards = [];
+  var currentCardTab = 'text';
+  var partnerAvatarUrl = null;
+  var myAvatarUrl = null;
+  var stickers = { my: [], partner: [] };
+  var currentStickerTab = 'my';
+  var replySpeed = 15000;
+  var partnerActiveTimer = null;
+  var partnerReplyTimer = null;
+  var currentFontSize = 15;
+
   function saveAllData() {
     var data = {
       messages: messages,
@@ -334,24 +384,7 @@
       partnerAvatarUrl: partnerAvatarUrl,
       myAvatarUrl: myAvatarUrl
     };
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch(e) {
-      // localStorage 满了（图片太多），只保存文字数据
-      var lightData = {
-        messages: messages.filter(function(m) { return !m.isSticker; }),
-        textCards: textCards,
-        emojiCards: emojiCards,
-        replySpeed: replySpeed,
-        partnerAvatarUrl: null,
-        myAvatarUrl: null
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(lightData));
-      } catch(e2) {
-        console.log('无法保存数据，存储空间不足');
-      }
-    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
   }
 
   function loadAllData() {
@@ -365,12 +398,21 @@
         replySpeed = data.replySpeed || 15000;
         partnerAvatarUrl = data.partnerAvatarUrl || null;
         myAvatarUrl = data.myAvatarUrl || null;
-        return true;
       }
-    } catch(e) {
-      console.log('数据加载失败');
-    }
-    return false;
+    } catch(e) {}
+    try {
+      var fs = localStorage.getItem(FONT_SIZE_KEY);
+      if (fs) currentFontSize = parseInt(fs) || 15;
+    } catch(e) {}
+  }
+
+  function applyFontSize() {
+    document.querySelectorAll('.bubble').forEach(function(b) {
+      b.style.fontSize = currentFontSize + 'px';
+    });
+    document.getElementById('fontSizeSlider').value = currentFontSize;
+    document.getElementById('currentFontLabel').textContent = currentFontSize + 'px';
+    localStorage.setItem(FONT_SIZE_KEY, currentFontSize);
   }
 
   function clearAllData() {
@@ -386,49 +428,24 @@
       renderMessages();
       renderCardList('');
       updateSpeedLabel();
-      alert('所有数据已清除！');
     }
   }
 
-  // ========== 变量初始化 ==========
-  var messages = [];
-  var textCards = [];
-  var emojiCards = [];
-  var currentCardTab = 'text';
-  var partnerAvatarUrl = null;
-  var myAvatarUrl = null;
-  var stickers = { my: [], partner: [] };
-  var currentStickerTab = 'my';
-  var replySpeed = 15000;
-  var partnerActiveTimer = null;
-  var partnerReplyTimer = null;
-
-  // 先加载数据
   loadAllData();
 
   function getTime() {
-    var now = new Date();
-    return now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   }
 
   function escapeHtml(text) {
     return String(text).replace(/[&<>"]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      if (m === '"') return '&quot;';
-      return m;
+      if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; if (m === '"') return '&quot;'; return m;
     });
   }
 
-  function scrollToBottom() {
-    var mc = document.getElementById('messagesContainer');
-    if (mc) mc.scrollTop = mc.scrollHeight;
-  }
-
+  function scrollToBottom() { var mc = document.getElementById('messagesContainer'); if (mc) mc.scrollTop = mc.scrollHeight; }
   function showTyping() { document.getElementById('typingIndicator').classList.add('active'); }
   function hideTyping() { document.getElementById('typingIndicator').classList.remove('active'); }
-
   function getAllCards() { return textCards.concat(emojiCards); }
 
   function updateAvatars() {
@@ -440,135 +457,98 @@
   function renderMessages() {
     var mc = document.getElementById('messagesContainer');
     if (!mc) return;
-    var rows = mc.querySelectorAll('.message-row');
-    for (var i = 0; i < rows.length; i++) rows[i].remove();
-
-    for (var j = 0; j < messages.length; j++) {
-      var msg = messages[j];
-      var row = document.createElement('div');
-      row.className = 'message-row ' + msg.type;
-      var av = document.createElement('div');
-      av.className = 'msg-avatar';
+    mc.querySelectorAll('.message-row').forEach(function(r) { r.remove(); });
+    messages.forEach(function(msg) {
+      var row = document.createElement('div'); row.className = 'message-row ' + msg.type;
+      var av = document.createElement('div'); av.className = 'msg-avatar';
       var url = msg.type === 'sent' ? myAvatarUrl : partnerAvatarUrl;
       av.innerHTML = url ? '<img src="' + url + '">' : (msg.type === 'sent' ? '🌸' : '🦋');
-      var wrap = document.createElement('div');
-      wrap.className = 'bubble-wrapper';
-      var bubble = document.createElement('div');
-      bubble.className = 'bubble';
+      var wrap = document.createElement('div'); wrap.className = 'bubble-wrapper';
+      var bubble = document.createElement('div'); bubble.className = 'bubble';
+      bubble.style.fontSize = currentFontSize + 'px';
       if (msg.isSticker) bubble.innerHTML = '<img src="' + msg.text + '" class="sticker-img">';
       else bubble.textContent = msg.text;
-      var meta = document.createElement('div');
-      meta.className = 'message-meta';
-      meta.innerHTML = '<span class="message-time">' + msg.time + '</span>';
+      var meta = document.createElement('div'); meta.className = 'message-meta';
+      meta.innerHTML = '<span>' + msg.time + '</span>';
       if (msg.type === 'sent' && msg.read) {
-        var rs = document.createElement('span');
-        rs.className = 'read-text'; rs.textContent = '已读'; meta.appendChild(rs);
+        var rs = document.createElement('span'); rs.className = 'read-text'; rs.textContent = '已读'; meta.appendChild(rs);
       }
-      wrap.appendChild(bubble); wrap.appendChild(meta);
-      row.appendChild(av); row.appendChild(wrap);
+      wrap.appendChild(bubble); wrap.appendChild(meta); row.appendChild(av); row.appendChild(wrap);
       mc.appendChild(row);
-    }
-    var eh = document.getElementById('emptyHint');
-    if (eh) eh.style.display = messages.length === 0 ? 'flex' : 'none';
+    });
+    var eh = document.getElementById('emptyHint'); if (eh) eh.style.display = messages.length === 0 ? 'flex' : 'none';
     scrollToBottom();
   }
 
   function addMessage(text, type, read, isSticker) {
     if (!text || text.trim() === '') return;
-    var msg = { text: text.trim(), type: type, time: getTime(), read: read || false, isSticker: isSticker || false, id: Date.now() + Math.random() };
-    messages.push(msg);
-    renderMessages();
-    saveAllData();
-    return msg;
+    messages.push({ text: text.trim(), type: type, time: getTime(), read: read || false, isSticker: isSticker || false, id: Date.now() + Math.random() });
+    renderMessages(); saveAllData();
   }
 
   function markMessageAsRead(msgId) {
     for (var i = messages.length - 1; i >= 0; i--) {
       if (messages[i].id === msgId && messages[i].type === 'sent' && !messages[i].read) {
-        messages[i].read = true;
-        renderMessages();
-        saveAllData();
-        return true;
+        messages[i].read = true; renderMessages(); saveAllData(); return true;
       }
     }
     return false;
   }
 
   function generateReply() {
-    var allCards = getAllCards();
-    if (allCards.length > 0) {
-      return allCards[Math.floor(Math.random() * allCards.length)];
-    }
-    var pureTexts = ['只属于我们。','没有别人。','祁煜听到了。','收到。','安静的对话真好。','今天也想陪着你。','嗯，我明白。','这里很安全。'];
-    return pureTexts[Math.floor(Math.random() * pureTexts.length)];
+    var all = getAllCards();
+    if (all.length > 0) return all[Math.floor(Math.random() * all.length)];
+    return ['只属于我们。','没有别人。','祁煜听到了。','收到。','安静的对话真好。'][Math.floor(Math.random() * 5)];
   }
 
   function partnerDecideReply(willReply) {
     if (willReply) {
       hideTyping();
-      var msgCount = 1 + Math.floor(Math.random() * 2);
-      for (var i = 0; i < msgCount; i++) {
-        (function(d) {
-          setTimeout(function() { addMessage(generateReply(), 'received', false, false); }, d);
-        })(i * 600);
+      for (var i = 0; i < (1 + Math.floor(Math.random() * 2)); i++) {
+        (function(d) { setTimeout(function() { addMessage(generateReply(), 'received', false, false); }, d); })(i * 600);
       }
     }
     scheduleNextPartnerMessage();
   }
 
   function partnerReadThenMaybeReply(sentMsgId) {
-    var readDelay = 500 + Math.floor(Math.random() * 1500);
     setTimeout(function() {
       markMessageAsRead(sentMsgId);
-      var willReply = Math.random() < 0.7;
-      if (willReply) {
+      if (Math.random() < 0.7) {
         showTyping();
-        var decideDelay = Math.max(3000, replySpeed * (0.5 + Math.random() * 0.5));
-        decideDelay = Math.min(decideDelay, 300000);
-        partnerReplyTimer = setTimeout(function() { partnerDecideReply(true); }, decideDelay);
-      } else {
-        hideTyping();
-        scheduleNextPartnerMessage();
-      }
-    }, readDelay);
+        var delay = Math.max(3000, replySpeed * (0.5 + Math.random() * 0.5));
+        partnerReplyTimer = setTimeout(function() { partnerDecideReply(true); }, Math.min(delay, 300000));
+      } else { hideTyping(); scheduleNextPartnerMessage(); }
+    }, 500 + Math.random() * 1500);
   }
 
   function scheduleNextPartnerMessage() {
     if (partnerActiveTimer) clearTimeout(partnerActiveTimer);
-    var nextDelay = replySpeed + Math.floor(Math.random() * replySpeed);
     partnerActiveTimer = setTimeout(function() {
       showTyping();
-      var typingTime = Math.min(3000, replySpeed * 0.4);
       setTimeout(function() {
         hideTyping();
-        var msgCount = 1 + Math.floor(Math.random() * 2);
-        for (var i = 0; i < msgCount; i++) {
-          (function(d) {
-            setTimeout(function() { addMessage(generateReply(), 'received', false, false); }, d);
-          })(i * 600);
+        for (var i = 0; i < (1 + Math.floor(Math.random() * 2)); i++) {
+          (function(d) { setTimeout(function() { addMessage(generateReply(), 'received', false, false); }, d); })(i * 600);
         }
         scheduleNextPartnerMessage();
-      }, typingTime);
-    }, nextDelay);
+      }, Math.min(3000, replySpeed * 0.4));
+    }, replySpeed + Math.random() * replySpeed);
   }
 
   function handleUserSentMessage() {
-    var sentMsg = messages[messages.length - 1];
-    if (sentMsg && sentMsg.type === 'sent') {
+    var m = messages[messages.length - 1];
+    if (m && m.type === 'sent') {
       if (partnerReplyTimer) clearTimeout(partnerReplyTimer);
       if (partnerActiveTimer) clearTimeout(partnerActiveTimer);
-      hideTyping();
-      partnerReadThenMaybeReply(sentMsg.id);
+      hideTyping(); partnerReadThenMaybeReply(m.id);
     }
   }
 
   function sendText() {
-    var input = document.getElementById('messageInput');
-    var text = input.value.trim();
+    var input = document.getElementById('messageInput'), text = input.value.trim();
     if (!text) return;
-    addMessage(text, 'sent', false, false);
-    input.value = '';
-    handleUserSentMessage();
+    addMessage(text, 'sent', false, false); input.value = ''; handleUserSentMessage();
   }
 
   function getCurrentCards() { return currentCardTab === 'text' ? textCards : emojiCards; }
@@ -578,58 +558,37 @@
     if (!container) return;
     var cards = getCurrentCards();
     var list = filter ? cards.filter(function(c) { return c.indexOf(filter) !== -1; }) : cards;
-    container.innerHTML = '';
-    if (list.length === 0) { container.innerHTML = '<div style="padding:1rem;text-align:center;color:#b392b9;">暂无字卡</div>'; return; }
-    for (var i = 0; i < list.length; i++) {
-      var card = list[i], realIdx = cards.indexOf(card);
+    container.innerHTML = list.length === 0 ? '<div style="padding:1rem;text-align:center;color:#b392b9;">暂无字卡</div>' : '';
+    list.forEach(function(card) {
+      var idx = cards.indexOf(card);
       var item = document.createElement('div'); item.className = 'card-item';
-      item.innerHTML = '<span class="card-text">' + escapeHtml(card) + '</span><div class="card-actions"><button class="icon-btn edit-card" data-idx="' + realIdx + '">✎</button><button class="icon-btn delete-card" data-idx="' + realIdx + '">🗑️</button></div>';
+      item.innerHTML = '<span class="card-text">' + escapeHtml(card) + '</span><div><button class="icon-btn edit-card" data-idx="' + idx + '">✎</button><button class="icon-btn delete-card" data-idx="' + idx + '">🗑️</button></div>';
       container.appendChild(item);
-    }
+    });
     container.querySelectorAll('.delete-card').forEach(function(b) {
-      b.onclick = function() {
-        var idx = parseInt(this.getAttribute('data-idx'));
-        var arr = getCurrentCards();
-        arr.splice(idx, 1);
-        renderCardList(document.getElementById('cardSearchInput').value);
-        saveAllData();
-      };
+      b.onclick = function() { var arr = getCurrentCards(); arr.splice(parseInt(this.dataset.idx), 1); renderCardList(document.getElementById('cardSearchInput').value); saveAllData(); };
     });
     container.querySelectorAll('.edit-card').forEach(function(b) {
       b.onclick = function() {
-        var idx = parseInt(this.getAttribute('data-idx'));
-        var arr = getCurrentCards();
-        var nt = prompt('修改字卡：', arr[idx]);
-        if (nt !== null && nt.trim() !== '') { arr[idx] = nt.trim(); renderCardList(document.getElementById('cardSearchInput').value); saveAllData(); }
+        var arr = getCurrentCards(), idx = parseInt(this.dataset.idx);
+        var nt = prompt('修改：', arr[idx]); if (nt !== null && nt.trim() !== '') { arr[idx] = nt.trim(); renderCardList(document.getElementById('cardSearchInput').value); saveAllData(); }
       };
     });
   }
 
   function addCardsToCurrent(lines) {
-    var arr = getCurrentCards();
-    var added = 0;
-    lines.forEach(function(l) {
-      var c = l.trim();
-      if (c && arr.indexOf(c) === -1) { arr.push(c); added++; }
-    });
-    renderCardList(document.getElementById('cardSearchInput').value);
-    saveAllData();
-    if (added > 0) alert('已添加 ' + added + ' 条字卡到' + (currentCardTab === 'text' ? '纯文字' : 'Emoji') + '板块');
-    else if (lines.some(function(l) { return l.trim(); })) alert('未新增（重复或为空，已自动跳过）');
+    var arr = getCurrentCards(), added = 0;
+    lines.forEach(function(l) { var c = l.trim(); if (c && arr.indexOf(c) === -1) { arr.push(c); added++; } });
+    renderCardList(document.getElementById('cardSearchInput').value); saveAllData();
+    if (added > 0) alert('已添加 ' + added + ' 条');
   }
 
   function renderStickerGrid() {
-    var grid = document.getElementById('stickerGrid');
-    if (!grid) return;
-    var list = stickers[currentStickerTab] || [];
-    grid.innerHTML = '';
+    var grid = document.getElementById('stickerGrid'); if (!grid) return;
+    var list = stickers[currentStickerTab] || []; grid.innerHTML = '';
     list.forEach(function(url) {
       var img = document.createElement('img'); img.src = url; img.className = 'sticker-item';
-      img.onclick = function() {
-        var type = currentStickerTab === 'my' ? 'sent' : 'received';
-        addMessage(url, type, false, true);
-        if (type === 'sent') handleUserSentMessage();
-      };
+      img.onclick = function() { var t = currentStickerTab === 'my' ? 'sent' : 'received'; addMessage(url, t, false, true); if (t === 'sent') handleUserSentMessage(); };
       grid.appendChild(img);
     });
   }
@@ -650,33 +609,36 @@
     document.getElementById('myAvatarInput').onchange = function(e) {
       if (e.target.files[0]) { var r = new FileReader(); r.onload = function(ev) { myAvatarUrl = ev.target.result; updateAvatars(); saveAllData(); }; r.readAsDataURL(e.target.files[0]); e.target.value = ''; }
     };
+    document.getElementById('clearDataBtn').onclick = clearAllData;
 
-    document.getElementById('clearDataBtn').onclick = function() { clearAllData(); };
+    document.getElementById('fontSizeBtn').onclick = function() {
+      document.getElementById('fontSizeSlider').value = currentFontSize;
+      document.getElementById('currentFontLabel').textContent = currentFontSize + 'px';
+      document.getElementById('fontModal').classList.add('active');
+    };
+    document.getElementById('closeFontModalBtn').onclick = function() { document.getElementById('fontModal').classList.remove('active'); };
+    document.getElementById('fontModal').onclick = function(e) { if (e.target === this) this.classList.remove('active'); };
+    document.getElementById('fontSizeSlider').oninput = function() {
+      currentFontSize = parseInt(this.value);
+      document.getElementById('currentFontLabel').textContent = currentFontSize + 'px';
+      applyFontSize();
+    };
 
     document.getElementById('wordcardBtn').onclick = function(e) {
       e.preventDefault();
-      var allCards = getAllCards();
-      if (allCards.length === 0) { document.getElementById('wordcardModal').classList.add('active'); renderCardList(''); }
+      var all = getAllCards();
+      if (all.length === 0) { document.getElementById('wordcardModal').classList.add('active'); renderCardList(''); }
       else {
-        if (confirm('确定发送随机字卡？取消打开管理。')) {
-          var card = allCards[Math.floor(Math.random() * allCards.length)];
-          addMessage(card, 'sent', false, false);
-          handleUserSentMessage();
-        } else { document.getElementById('wordcardModal').classList.add('active'); renderCardList(''); }
+        if (confirm('发送随机字卡？')) { addMessage(all[Math.floor(Math.random() * all.length)], 'sent', false, false); handleUserSentMessage(); }
+        else { document.getElementById('wordcardModal').classList.add('active'); renderCardList(''); }
       }
     };
-
     document.getElementById('closeModalBtn').onclick = function() { document.getElementById('wordcardModal').classList.remove('active'); };
     document.getElementById('wordcardModal').onclick = function(e) { if (e.target === this) this.classList.remove('active'); };
     document.getElementById('cardSearchInput').oninput = function(e) { renderCardList(e.target.value); };
-    document.getElementById('addCardsBtn').onclick = function() {
-      var ta = document.getElementById('cardTextarea');
-      addCardsToCurrent(ta.value.split(/\r?\n/));
-      ta.value = '';
-    };
+    document.getElementById('addCardsBtn').onclick = function() { var ta = document.getElementById('cardTextarea'); addCardsToCurrent(ta.value.split(/\r?\n/)); ta.value = ''; };
     document.getElementById('deleteAllCardsBtn').onclick = function() {
-      var arr = getCurrentCards();
-      if (arr.length === 0) { alert('当前板块无字卡'); return; }
+      var arr = getCurrentCards(); if (arr.length === 0) return;
       if (confirm('删除当前板块全部' + arr.length + '条？')) { arr.length = 0; renderCardList(''); saveAllData(); }
     };
     document.getElementById('cardFileInput').onchange = function(e) {
@@ -685,54 +647,39 @@
 
     document.querySelectorAll('.card-tab').forEach(function(t) {
       t.onclick = function() {
-        currentCardTab = this.getAttribute('data-cardtab');
-        document.querySelectorAll('.card-tab').forEach(function(x) { x.classList.remove('active'); });
-        this.classList.add('active');
-        document.getElementById('cardSearchInput').value = '';
-        renderCardList('');
+        currentCardTab = this.dataset.cardtab;
+        document.querySelectorAll('.card-tab').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active');
+        document.getElementById('cardSearchInput').value = ''; renderCardList('');
       };
     });
 
     document.getElementById('stickerToggleBtn').onclick = function() { document.getElementById('stickerPanel').classList.toggle('active'); };
     document.querySelectorAll('.sticker-tab').forEach(function(t) {
       t.onclick = function() {
-        currentStickerTab = this.getAttribute('data-tab');
-        document.querySelectorAll('.sticker-tab').forEach(function(x) { x.classList.remove('active'); });
-        this.classList.add('active');
-        document.getElementById('currentTabLabel').textContent = currentStickerTab === 'my' ? '我的表情' : '对方表情';
-        renderStickerGrid();
+        currentStickerTab = this.dataset.tab;
+        document.querySelectorAll('.sticker-tab').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active');
+        document.getElementById('currentTabLabel').textContent = currentStickerTab === 'my' ? '我的表情' : '对方表情'; renderStickerGrid();
       };
     });
     document.getElementById('stickerFileInput').onchange = function(e) {
       if (e.target.files.length > 0) {
-        Array.from(e.target.files).forEach(function(f) {
-          var r = new FileReader(); r.onload = function(ev) { stickers[currentStickerTab].push(ev.target.result); renderStickerGrid(); }; r.readAsDataURL(f);
-        });
+        Array.from(e.target.files).forEach(function(f) { var r = new FileReader(); r.onload = function(ev) { stickers[currentStickerTab].push(ev.target.result); renderStickerGrid(); }; r.readAsDataURL(f); });
         e.target.value = '';
       }
     };
 
-    document.getElementById('speedBtn').onclick = function() {
-      updateSpeedLabel();
-      document.getElementById('speedModal').classList.add('active');
-    };
+    document.getElementById('speedBtn').onclick = function() { updateSpeedLabel(); document.getElementById('speedModal').classList.add('active'); };
     document.getElementById('closeSpeedModalBtn').onclick = function() { document.getElementById('speedModal').classList.remove('active'); };
     document.getElementById('speedModal').onclick = function(e) { if (e.target === this) this.classList.remove('active'); };
-    document.querySelectorAll('.speed-option').forEach(function(btn) {
-      btn.onclick = function() {
-        replySpeed = parseInt(this.getAttribute('data-speed'));
-        document.querySelectorAll('.speed-option').forEach(function(b) { b.classList.remove('active'); });
-        this.classList.add('active');
-        updateSpeedLabel();
-        saveAllData();
+    document.querySelectorAll('.speed-option').forEach(function(b) {
+      b.onclick = function() {
+        replySpeed = parseInt(this.dataset.speed);
+        document.querySelectorAll('.speed-option').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active');
+        updateSpeedLabel(); saveAllData();
       };
     });
 
-    updateAvatars();
-    renderMessages();
-    renderStickerGrid();
-    renderCardList('');
-    updateSpeedLabel();
+    updateAvatars(); renderMessages(); renderStickerGrid(); renderCardList(''); updateSpeedLabel(); applyFontSize();
     scheduleNextPartnerMessage();
   }
 
